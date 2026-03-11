@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "dutt-lab-utils"
+version = "0.1.0"
+description = "Shared utilities for Dutt Lab projects"
+requires-python = ">=3.11"
+dependencies = [
+    "pymupdf>=1.24.0",
+    "pytesseract>=0.3.10",
+    "Pillow>=10.0.0",        # tesseract needs this for image handling
+]
+
+[tool.setuptools.packages.find]
+# auto-discovers dutt_lab_utils/ and all subpackages
+where = ["."]
