@@ -14,5 +14,4 @@ dependencies = [
 ]
 
 [tool.setuptools.packages.find]
-# auto-discovers dutt_lab_utils/ and all subpackages
-where = ["."]
+where = ["src"]
