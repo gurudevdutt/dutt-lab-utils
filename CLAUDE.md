@@ -71,6 +71,26 @@ Tesseract must be installed on the OS:
 
 Collaborators need this for OCR to work. pymupdf-only extraction works without it.
 
+## Using from another repo
+This package is not on PyPI. Install from a local path or from Git:
+
+```bash
+# From a local clone (editable)
+pip install -e /path/to/dutt-lab-utils
+
+# From GitHub (editable)
+pip install -e git+https://github.com/gurudevdutt/dutt-lab-utils.git
+```
+
+Then in your code:
+
+```python
+from pittqlab_utils.llm import PittAIClient, PittAIModels, PittAIResponse
+from pittqlab_utils.pdf import extract_text, extract_text_batch, ExtractionResult
+```
+
+Set `PITTAI_API_KEY` in your app’s environment (or `.env`) before using the LLM client.
+
 ## Commands
 **Always use a `.venv` and activate it** before installing or running tests:
 
