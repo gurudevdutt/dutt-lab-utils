@@ -1,0 +1,6 @@
+# Install with: pip install -r requirements.txt
+# For editable install: pip install -e .
+pymupdf>=1.24.0
+pytesseract>=0.3.10
+Pillow>=10.0.0
+requests>=2.28.0

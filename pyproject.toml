@@ -1,17 +1,21 @@
 [build-system]
 requires = ["setuptools>=68"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "dutt-lab-utils"
 version = "0.1.0"
 description = "Shared utilities for Dutt Lab projects"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 dependencies = [
     "pymupdf>=1.24.0",
     "pytesseract>=0.3.10",
     "Pillow>=10.0.0",        # tesseract needs this for image handling
+    "requests>=2.28.0",      # Pitt AI Connect client (pittai.py)
 ]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
