@@ -1,26 +1,38 @@
 # dutt-lab-utils
 
-Shared Python utilities for Dutt Lab projects.
+Shared Python utilities for Dutt Lab projects (PDF extraction, Pitt AI Connect LLM client).
 
-## Install
+## Using from another repo
 
-In any project that needs this, add to `requirements.txt`:
+This package is **not on PyPI**. Install from a local clone or directly from GitHub:
 
-```
-dutt-lab-utils @ git+https://github.com/YOUR_USERNAME/dutt-lab-utils.git@main
-```
-
-Then install normally:
 ```bash
-pip install -r requirements.txt
+# From a local path (editable — changes in dutt-lab-utils show up immediately)
+pip install -e /path/to/dutt-lab-utils
+
+# From GitHub (editable)
+pip install -e git+https://github.com/gurudevdutt/dutt-lab-utils.git
 ```
 
-For **development** (if you're actively editing this package and want changes to reflect immediately):
-```bash
-git clone https://github.com/YOUR_USERNAME/dutt-lab-utils.git
-cd dutt-lab-utils
-pip install -e .
+In your code, import the **package name** `pittqlab_utils` (the name of the package under `src/`, not "dutt-lab-utils"):
+
+```python
+from pittqlab_utils.llm import PittAIClient, PittAIModels, PittAIResponse
+from pittqlab_utils.pdf import extract_text, extract_text_batch, ExtractionResult
 ```
+
+For the LLM client, set `PITTAI_API_KEY` in your environment or `.env` before calling (this library does not load `.env` itself).
+
+### Pinning in requirements.txt
+
+To pin from Git in another project’s `requirements.txt`:
+
+```
+# Replace with your fork or org if needed
+dutt-lab-utils @ git+https://github.com/gurudevdutt/dutt-lab-utils.git@main
+```
+
+Then: `pip install -r requirements.txt`. For local development on dutt-lab-utils, use `pip install -e /path/to/dutt-lab-utils` instead so edits apply immediately.
 
 ## System requirement: Tesseract
 
@@ -38,8 +50,10 @@ pymupdf-only extraction works without Tesseract installed.
 
 ## Usage
 
+### PDF extraction
+
 ```python
-from dutt_lab_utils.pdf import extract_text, extract_text_batch, ExtractionResult
+from pittqlab_utils.pdf import extract_text, extract_text_batch, ExtractionResult
 from pathlib import Path
 
 # Single PDF — auto-detects whether to use pymupdf or Tesseract
@@ -54,4 +68,17 @@ results = extract_text_batch(list(Path("pdfs/").glob("*.pdf")))
 
 # Force OCR (e.g. you know it's a scanned document)
 result = extract_text(Path("scan.pdf"), force_ocr=True)
+```
+
+### Pitt AI Connect (LLM)
+
+```python
+from pittqlab_utils.llm import PittAIClient, PittAIModels
+
+client = PittAIClient()  # uses PITTAI_API_KEY from environment
+resp = client.chat("Summarize this.", model=PittAIModels.GEMINI_FLASH)
+print(resp.text)
+
+# Structured JSON
+data = client.chat_json('Return JSON: {"score": 1-5, "reason": "..."} for this abstract.')
 ```
