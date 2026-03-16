@@ -82,3 +82,5 @@ print(resp.text)
 # Structured JSON
 data = client.chat_json('Return JSON: {"score": 1-5, "reason": "..."} for this abstract.')
 ```
+
+The client automatically sends `max_completion_tokens` instead of `max_tokens` for Azure/OpenAI models (e.g. GPT via Pitt AI Connect) so those backends work without extra configuration.

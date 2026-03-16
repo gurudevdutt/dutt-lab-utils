@@ -41,6 +41,9 @@ src/
 - API key read from `PITTAI_API_KEY` environment variable — consuming apps must call
   `load_dotenv()` in their own startup; this library does NOT call it
 - Multimodal images encoded as base64 data URLs per Pitt AI Connect spec
+- **Azure/OpenAI models**: the client sends `max_completion_tokens` instead of `max_tokens`
+  for model strings containing `azure-foundry` or `openai`, so GPT and other Azure-backed
+  models work without caller changes
 
 ## Adding new shared utilities
 Before adding something here, ask: is this used by 2+ projects AND likely to diverge

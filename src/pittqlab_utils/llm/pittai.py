@@ -298,6 +298,10 @@ class PittAIClient:
 
     def _post_with_retry(self, payload: dict) -> dict:
         """POST to the Portkey endpoint with exponential backoff retry."""
+        model = payload.get("model", "")
+        # Azure/OpenAI backend expects max_completion_tokens instead of max_tokens
+        if ("azure-foundry" in model.lower() or "openai" in model.lower()) and "max_tokens" in payload:
+            payload["max_completion_tokens"] = payload.pop("max_tokens")
         headers = {
             "Content-Type": "application/json",
             "x-portkey-api-key": self.api_key,
