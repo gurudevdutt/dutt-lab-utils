@@ -33,6 +33,8 @@ def main():
     ]
     for label, model in tests:
         print(f"\n--- {label} ---")
+        key_source = client.get_api_key_source_for_model(model)
+        print(f"Key read: {key_source}")
         try:
             resp = client.chat(PROMPT, model=model)
             print(f"Model: {resp.model}")

@@ -46,10 +46,11 @@ def make_mock_response(text: str, model: str = "test-model", status_code: int = 
 class TestPittAIModels:
     def test_model_strings_are_strings(self):
         for attr in ("CLAUDE_SONNET", "CLAUDE_HAIKU", "CLAUDE_OPUS",
-                     "GEMINI_FLASH", "GEMINI_FLASH_LITE", "GPT_4O", "GPT_4O_MINI"):
+                     "GEMINI_FLASH", "GEMINI_FLASH_LITE", "GEMINI_PRO",
+                     "GPT_5p1", "GPT_5p2", "GPT_5p4"):
             val = getattr(PittAIModels, attr)
             assert isinstance(val, str)
-            assert val.startswith("@pitt-ai-connect/")
+            assert val.startswith("@pitt-ai-connect"), f"{attr} should be a Pitt AI Connect model string"
 
     def test_tier_aliases_point_to_valid_models(self):
         assert PittAIModels.CHEAP    == PittAIModels.GEMINI_FLASH_LITE
@@ -74,8 +75,16 @@ class TestClientInit:
 
     def test_missing_api_key_raises(self, monkeypatch):
         monkeypatch.delenv("PITTAI_API_KEY", raising=False)
+        for k in ("PITTAI_API_KEY_ANTHROPIC", "PITTAI_API_KEY_GOOGLE", "PITTAI_API_KEY_OPENAI"):
+            monkeypatch.delenv(k, raising=False)
         with pytest.raises(ValueError, match="PITTAI_API_KEY"):
             PittAIClient()
+
+    def test_init_ok_with_only_provider_keys(self, monkeypatch):
+        monkeypatch.delenv("PITTAI_API_KEY", raising=False)
+        monkeypatch.setenv("PITTAI_API_KEY_ANTHROPIC", "anthropic-key")
+        c = PittAIClient()
+        assert c.api_key == "anthropic-key"
 
     def test_default_model_is_balanced(self):
         c = PittAIClient(api_key="k")
@@ -181,6 +190,35 @@ class TestChat:
         headers = mock_post.call_args.kwargs["headers"]
         assert headers["x-portkey-api-key"] == "test-key-dummy"
         assert headers["Content-Type"] == "application/json"
+
+    @patch("pittqlab_utils.llm.pittai.requests.post")
+    def test_provider_key_used_for_anthropic_model(self, mock_post, monkeypatch):
+        monkeypatch.setenv("PITTAI_API_KEY", "default-key")
+        monkeypatch.setenv("PITTAI_API_KEY_ANTHROPIC", "anthropic-key")
+        c = PittAIClient()
+        mock_post.return_value = make_mock_response("ok")
+        c.chat("Hi", model=PittAIModels.CLAUDE_HAIKU)
+        assert mock_post.call_args.kwargs["headers"]["x-portkey-api-key"] == "anthropic-key"
+
+    @patch("pittqlab_utils.llm.pittai.requests.post")
+    def test_provider_key_used_for_google_model(self, mock_post, monkeypatch):
+        monkeypatch.setenv("PITTAI_API_KEY", "default-key")
+        monkeypatch.setenv("PITTAI_API_KEY_GOOGLE", "google-key")
+        c = PittAIClient()
+        mock_post.return_value = make_mock_response("ok")
+        c.chat("Hi", model=PittAIModels.GEMINI_FLASH)
+        assert mock_post.call_args.kwargs["headers"]["x-portkey-api-key"] == "google-key"
+
+    @patch("pittqlab_utils.llm.pittai.requests.post")
+    def test_default_key_used_when_no_provider_key_set(self, mock_post, monkeypatch):
+        monkeypatch.setenv("PITTAI_API_KEY", "default-key")
+        monkeypatch.delenv("PITTAI_API_KEY_ANTHROPIC", raising=False)
+        monkeypatch.delenv("PITTAI_API_KEY_GOOGLE", raising=False)
+        monkeypatch.delenv("PITTAI_API_KEY_OPENAI", raising=False)
+        c = PittAIClient()
+        mock_post.return_value = make_mock_response("ok")
+        c.chat("Hi", model=PittAIModels.GEMINI_FLASH)
+        assert mock_post.call_args.kwargs["headers"]["x-portkey-api-key"] == "default-key"
 
     @patch("pittqlab_utils.llm.pittai.requests.post")
     def test_chat_json_parses_valid_json(self, mock_post, client):

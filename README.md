@@ -21,7 +21,7 @@ from pittqlab_utils.llm import PittAIClient, PittAIModels, PittAIResponse
 from pittqlab_utils.pdf import extract_text, extract_text_batch, ExtractionResult
 ```
 
-For the LLM client, set `PITTAI_API_KEY` in your environment or `.env` before calling (this library does not load `.env` itself).
+For the LLM client, set `PITTAI_API_KEY` in your environment or `.env` before calling (this library does not load `.env` itself). Optionally set `PITTAI_API_KEY_ANTHROPIC`, `PITTAI_API_KEY_GOOGLE`, and `PITTAI_API_KEY_OPENAI` for one key per provider; the client picks the key from the model string on each request (e.g. Claude → Anthropic key, Gemini → Google key, GPT → OpenAI key).
 
 ### Pinning in requirements.txt
 

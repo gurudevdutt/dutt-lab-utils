@@ -88,18 +88,45 @@ class PittAIResponse:
 
 
 # ---------------------------------------------------------------------------
+# Per-provider API keys (Option A: one key per provider for billing)
+# ---------------------------------------------------------------------------
+
+_PROVIDER_ENV_KEYS = {
+    "anthropic": "PITTAI_API_KEY_ANTHROPIC",
+    "google": "PITTAI_API_KEY_GOOGLE",
+    "openai": "PITTAI_API_KEY_OPENAI",
+}
+
+
+def _provider_from_model(model: str) -> str | None:
+    """Return provider name from model string, or None if unrecognized."""
+    m = model.lower()
+    if "anthropic" in m:
+        return "anthropic"
+    if "google-vertex" in m or "google" in m:
+        return "google"
+    if "azure-foundry" in m or "openai" in m:
+        return "openai"
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Client
 # ---------------------------------------------------------------------------
 
 class PittAIClient:
     """Client for Pitt AI Connect via Portkey gateway.
 
+    Supports one API key per provider for separate billing. Optional env vars:
+    PITTAI_API_KEY_ANTHROPIC, PITTAI_API_KEY_GOOGLE, PITTAI_API_KEY_OPENAI.
+    The key for each request is chosen from the model string; if no provider
+    key is set, PITTAI_API_KEY (or api_key) is used.
+
     Args:
-        api_key: Pitt AI Connect API key. Defaults to PITTAI_API_KEY env var.
-        default_model: Model string to use when none is specified per-call.
-            Defaults to PittAIModels.BALANCED.
-        max_retries: Number of retry attempts on transient errors.
-        retry_delay: Base delay in seconds between retries (exponential backoff).
+        api_key: Default API key. Defaults to PITTAI_API_KEY env var.
+        default_model: Model string when none is specified per-call.
+        max_retries: Retry attempts on transient errors.
+        retry_delay: Base delay (seconds) between retries (exponential backoff).
         timeout: Request timeout in seconds.
     """
 
@@ -114,15 +141,36 @@ class PittAIClient:
         timeout: int = 60,
     ):
         self.api_key = api_key or os.environ.get("PITTAI_API_KEY")
-        if not self.api_key:
+        self._provider_keys: dict[str, str] = {}
+        for provider, env_key in _PROVIDER_ENV_KEYS.items():
+            val = os.environ.get(env_key)
+            if val:
+                self._provider_keys[provider] = val
+        if not self.api_key and not self._provider_keys:
             raise ValueError(
                 "Pitt AI Connect API key not found. "
-                "Set PITTAI_API_KEY in your .env file or pass api_key= explicitly."
+                "Set PITTAI_API_KEY in your .env or pass api_key= explicitly."
             )
+        if not self.api_key:
+            self.api_key = next(iter(self._provider_keys.values()))
         self.default_model = default_model
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         self.timeout = timeout
+
+    def _get_api_key_for_model(self, model: str) -> str:
+        """Return the API key to use for this model (provider-specific or default)."""
+        provider = _provider_from_model(model)
+        if provider and provider in self._provider_keys:
+            return self._provider_keys[provider]
+        return self.api_key
+
+    def get_api_key_source_for_model(self, model: str) -> str:
+        """Return the env var name used for this model (e.g. PITTAI_API_KEY_GOOGLE). For logging only."""
+        provider = _provider_from_model(model)
+        if provider and provider in self._provider_keys:
+            return _PROVIDER_ENV_KEYS[provider]
+        return "PITTAI_API_KEY"
 
     # ------------------------------------------------------------------
     # Public interface
@@ -302,9 +350,10 @@ class PittAIClient:
         # Azure/OpenAI backend expects max_completion_tokens instead of max_tokens
         if ("azure-foundry" in model.lower() or "openai" in model.lower()) and "max_tokens" in payload:
             payload["max_completion_tokens"] = payload.pop("max_tokens")
+        api_key = self._get_api_key_for_model(model)
         headers = {
             "Content-Type": "application/json",
-            "x-portkey-api-key": self.api_key,
+            "x-portkey-api-key": api_key,
         }
         last_exc: Exception | None = None
 
