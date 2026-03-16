@@ -21,7 +21,19 @@ from pittqlab_utils.llm import PittAIClient, PittAIModels, PittAIResponse
 from pittqlab_utils.pdf import extract_text, extract_text_batch, ExtractionResult
 ```
 
-For the LLM client, set `PITTAI_API_KEY` in your environment or `.env` before calling (this library does not load `.env` itself). Optionally set `PITTAI_API_KEY_ANTHROPIC`, `PITTAI_API_KEY_GOOGLE`, and `PITTAI_API_KEY_OPENAI` for one key per provider; the client picks the key from the model string on each request (e.g. Claude → Anthropic key, Gemini → Google key, GPT → OpenAI key).
+For the LLM client, set `PITTAI_API_KEY` in your environment or `.env` before calling (this library does not load `.env` itself).
+
+#### Per-provider API keys (optional)
+
+You can use **one API key per provider** so that billing is split by provider (Anthropic, Google, OpenAI) in the Pitt AI Connect / Portkey portal. Set these optional env vars:
+
+| Env var | Used for |
+|---------|----------|
+| `PITTAI_API_KEY_ANTHROPIC` | Claude (Anthropic) models |
+| `PITTAI_API_KEY_GOOGLE` | Gemini (Google Vertex) models |
+| `PITTAI_API_KEY_OPENAI` | GPT (Azure/OpenAI) models |
+
+The client **chooses the key from the model** on each request: when you call `chat(..., model=PittAIModels.GEMINI_FLASH)`, it sends `PITTAI_API_KEY_GOOGLE`; for `PittAIModels.CLAUDE_HAIKU` it uses `PITTAI_API_KEY_ANTHROPIC`, and so on. If you don’t set a provider key, `PITTAI_API_KEY` is used for that model. You can set only the default key, only provider keys, or both.
 
 ### Pinning in requirements.txt
 
