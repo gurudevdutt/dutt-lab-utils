@@ -45,6 +45,7 @@ async def main():
         r = await router.classify(text, labels=LABELS)
         print(f"  [{r.label:10s}] {r.confidence:.2f}  {r.backend:30s}  {text!r}")
 
-    await ollama.aclose()
+    if hasattr(ollama, "aclose"):
+        await ollama.aclose()
 
 asyncio.run(main())
