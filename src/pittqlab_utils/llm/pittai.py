@@ -23,7 +23,7 @@ import os
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Union
+from typing import Dict, List, Optional, Union
 
 import requests
 
