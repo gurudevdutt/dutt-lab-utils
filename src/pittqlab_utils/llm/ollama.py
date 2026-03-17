@@ -5,7 +5,7 @@ Ollama async backend: /api/chat and /api/tags, shared httpx client, context mana
 from __future__ import annotations
 
 import json
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
 
 import httpx
 
@@ -62,6 +62,10 @@ class OllamaBackend:
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        await self.aclose()
+
+    async def aclose(self) -> None:
+        """Close the shared httpx client. Safe to call if not used as context manager."""
         if self._client is not None:
             await self._client.aclose()
             self._client = None
