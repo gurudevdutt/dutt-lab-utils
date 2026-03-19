@@ -26,3 +26,13 @@ Tesseract OCR must be installed at the OS level (`sudo apt install tesseract-ocr
 - The venv lives at `.venv/`. Activate with `source .venv/bin/activate`.
 - The package is installed in editable mode (`pip install -e ".[test]"`).
 - `PITTAI_API_KEY` is only needed for integration tests and live scripts in `scripts/`; all unit tests work without it.
+
+### Modules
+- `pittqlab_utils.llm` — LLM backends (OllamaBackend, PortkeyBackend, ClassifierRouter)
+- `pittqlab_utils.tools` — Gmail, Google Calendar, voice response (gTTS/ElevenLabs)
+- `pittqlab_utils.pdf` — PDF extraction with Tesseract fallback
+
+### Key constraints for agents
+- tools/ has no knowledge of Telegram or menakaibot — pure utility only
+- Email drafts are NEVER sent automatically — draft_email() only
+- Voice notes must be .ogg Opus format for Telegram compatibility
