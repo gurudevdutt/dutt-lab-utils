@@ -17,6 +17,8 @@ dependencies = [
     "google-auth-oauthlib>=1.0",
     "google-api-python-client>=2.0",
     "gTTS>=2.3",
+    "elevenlabs>=1.0",
+    "pydub>=0.25",
 ]
 
 [project.optional-dependencies]
