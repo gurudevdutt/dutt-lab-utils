@@ -5,7 +5,7 @@ Run with: pytest tests/ -v
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 import pytest
-from dutt_lab_utils.pdf.reader import (
+from pittqlab_utils.pdf.reader import (
     extract_text,
     extract_text_batch,
     ExtractionResult,
@@ -45,7 +45,7 @@ def dummy_pdf(tmp_path):
 def test_extract_text_uses_pymupdf_for_dense_pdf(dummy_pdf):
     dense_text = "word " * 500  # well above sparse threshold
 
-    with patch("dutt_lab_utils.pdf.reader._extract_with_pymupdf", return_value=(dense_text, 5)) as mock_mu:
+    with patch("pittqlab_utils.pdf.reader._extract_with_pymupdf", return_value=(dense_text, 5)) as mock_mu:
         result = extract_text(dummy_pdf)
 
     mock_mu.assert_called_once()
@@ -58,8 +58,8 @@ def test_extract_text_falls_back_to_tesseract_for_sparse_pdf(dummy_pdf):
     sparse_text = "x"  # way below threshold
     ocr_text = "Recovered text via OCR " * 100
 
-    with patch("dutt_lab_utils.pdf.reader._extract_with_pymupdf", return_value=(sparse_text, 3)), \
-         patch("dutt_lab_utils.pdf.reader._extract_with_tesseract", return_value=(ocr_text, 3)) as mock_ocr:
+    with patch("pittqlab_utils.pdf.reader._extract_with_pymupdf", return_value=(sparse_text, 3)), \
+         patch("pittqlab_utils.pdf.reader._extract_with_tesseract", return_value=(ocr_text, 3)) as mock_ocr:
         result = extract_text(dummy_pdf)
 
     mock_ocr.assert_called_once()
@@ -71,8 +71,8 @@ def test_extract_text_falls_back_to_tesseract_for_sparse_pdf(dummy_pdf):
 def test_extract_text_force_ocr_skips_pymupdf(dummy_pdf):
     ocr_text = "OCR result"
 
-    with patch("dutt_lab_utils.pdf.reader._extract_with_pymupdf") as mock_mu, \
-         patch("dutt_lab_utils.pdf.reader._extract_with_tesseract", return_value=(ocr_text, 2)):
+    with patch("pittqlab_utils.pdf.reader._extract_with_pymupdf") as mock_mu, \
+         patch("pittqlab_utils.pdf.reader._extract_with_tesseract", return_value=(ocr_text, 2)):
         result = extract_text(dummy_pdf, force_ocr=True)
 
     mock_mu.assert_not_called()
@@ -92,7 +92,7 @@ def test_extract_text_wrong_extension(tmp_path):
 
 
 def test_extraction_result_properties(dummy_pdf):
-    with patch("dutt_lab_utils.pdf.reader._extract_with_pymupdf", return_value=("hello world", 1)):
+    with patch("pittqlab_utils.pdf.reader._extract_with_pymupdf", return_value=("hello world", 1)):
         result = extract_text(dummy_pdf)
 
     assert result.char_count == len("hello world")
@@ -103,7 +103,7 @@ def test_extract_text_batch_skips_errors(tmp_path):
     good_pdf = tmp_path / "good.pdf"
     good_pdf.write_bytes(b"%PDF fake")
 
-    with patch("dutt_lab_utils.pdf.reader._extract_with_pymupdf", return_value=("text " * 200, 2)):
+    with patch("pittqlab_utils.pdf.reader._extract_with_pymupdf", return_value=("text " * 200, 2)):
         results = extract_text_batch([good_pdf, Path("missing.pdf")], skip_errors=True)
 
     assert len(results) == 1  # missing file skipped, not raised

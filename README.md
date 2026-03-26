@@ -21,7 +21,7 @@ from pittqlab_utils.llm import PittAIClient, PittAIModels, PittAIResponse
 from pittqlab_utils.pdf import extract_text, extract_text_batch, ExtractionResult
 ```
 
-For the LLM client, set `PITTAI_API_KEY` in your environment or `.env` before calling (this library does not load `.env` itself).
+For the LLM client, set `PITTAI_API_KEY` in your environment or `.env` before calling (this library does not load `.env` itself). In your app, use `python-dotenv`'s `load_dotenv()` at startup; see `scripts/test_provider_keys.py` for an example.
 
 #### Per-provider API keys (optional)
 
