@@ -19,6 +19,7 @@ dependencies = [
     "gTTS>=2.3",
     "elevenlabs>=1.0",
     "pydub>=0.25",
+    "python-dotenv>=1.0",  # load_dotenv() in scripts; library code does not call it
 ]
 
 [project.optional-dependencies]
