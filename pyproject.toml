@@ -17,6 +17,7 @@ dependencies = [
     "google-auth-oauthlib>=1.0",
     "google-api-python-client>=2.0",
     "gTTS>=2.3",
+    "python-dotenv>=1.0",  # load_dotenv() in scripts/examples; library code does not call it
 ]
 
 [project.optional-dependencies]

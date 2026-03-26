@@ -1,23 +1,20 @@
 #!/usr/bin/env python3
-"""Quick test: load .env, call one model per provider to verify per-provider API keys work. Run from repo root."""
+"""Quick test: load .env, call one model per provider to verify per-provider API keys work. Run from repo root.
 
-import os
+Uses python-dotenv's load_dotenv() — the same pattern consuming apps should use before
+creating PittAIClient (this package does not call load_dotenv itself).
+"""
+
 import sys
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-# Load .env into os.environ
-env_file = ROOT / ".env"
-if env_file.exists():
-    with open(env_file) as f:
-        for line in f:
-            line = line.strip()
-            if line and not line.startswith("#") and "=" in line:
-                k, _, v = line.partition("=")
-                v = v.strip().strip('"').strip("'")
-                os.environ[k.strip()] = v
+# Load repo-root .env into os.environ (works regardless of current working directory)
+load_dotenv(ROOT / ".env")
 
 from pittqlab_utils.llm.pittai import PittAIClient, PittAIModels
 
