@@ -15,17 +15,22 @@ class GmailTool:
 
     def __init__(self, auth: GoogleAuthManager):
         self._auth = auth
+        self._service = None
+        from googleapiclient.discovery import build
+
+        creds = self._auth.get_credentials()
+        self._service = build("gmail", "v1", credentials=creds)
+
+    def _get_service(self) -> Any:
+        return self._service
 
     async def _fetch_unread(self, max_results: int = 10) -> List[Dict[str, Any]]:
         """Fetch unread emails from INBOX. Returns list of {sender, subject, snippet, date} dicts."""
         def _sync_fetch() -> List[Dict[str, Any]]:
-            from googleapiclient.discovery import build
-
-            creds = self._auth.get_credentials()
-            service = build("gmail", "v1", credentials=creds)
+            service = self._get_service()
             results = service.users().messages().list(
                 userId="me",
-                labelIds=["INBOX"],
+                labelIds=["INBOX", "CATEGORY_PERSONAL"],
                 q="is:unread category:primary",
                 maxResults=max_results,
             ).execute()
@@ -89,10 +94,8 @@ class GmailTool:
         def _sync_draft() -> str:
             from email.mime.text import MIMEText
             import base64
-            from googleapiclient.discovery import build
 
-            creds = self._auth.get_credentials()
-            service = build("gmail", "v1", credentials=creds)
+            service = self._get_service()
             message = MIMEText(body)
             message["to"] = to
             message["subject"] = subject

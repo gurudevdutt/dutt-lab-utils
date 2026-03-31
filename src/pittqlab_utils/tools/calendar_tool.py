@@ -26,6 +26,14 @@ class CalendarTool:
 
     def __init__(self, auth: GoogleAuthManager):
         self._auth = auth
+        self._service = None
+        from googleapiclient.discovery import build
+
+        creds = self._auth.get_credentials()
+        self._service = build("calendar", "v3", credentials=creds)
+
+    def _get_service(self) -> Any:
+        return self._service
 
     async def _fetch_events(
         self,
@@ -34,10 +42,7 @@ class CalendarTool:
     ) -> List[Dict[str, Any]]:
         """Fetch events from primary calendar. Returns list of {title, start, end, location, description} dicts."""
         def _sync_fetch() -> List[Dict[str, Any]]:
-            from googleapiclient.discovery import build
-
-            creds = self._auth.get_credentials()
-            service = build("calendar", "v3", credentials=creds)
+            service = self._get_service()
             tmin = time_min.isoformat() + "Z" if time_min.tzinfo is None else time_min.isoformat()
             tmax = time_max.isoformat() + "Z" if time_max.tzinfo is None else time_max.isoformat()
             events_result = service.events().list(
@@ -114,10 +119,7 @@ class CalendarTool:
     ) -> str:
         """Create a calendar event. start/end are ISO 8601 strings. Returns confirmation."""
         def _sync_create() -> str:
-            from googleapiclient.discovery import build
-
-            creds = self._auth.get_credentials()
-            service = build("calendar", "v3", credentials=creds)
+            service = self._get_service()
             body = {
                 "summary": title,
                 "description": description,
