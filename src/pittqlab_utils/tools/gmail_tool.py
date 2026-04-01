@@ -25,7 +25,7 @@ class GmailTool:
             service = build("gmail", "v1", credentials=creds)
             results = service.users().messages().list(
                 userId="me",
-                labelIds=["INBOX"],
+                labelIds=["INBOX","CATEGORY_PERSONAL"],
                 q="is:unread",
                 maxResults=max_results,
             ).execute()
