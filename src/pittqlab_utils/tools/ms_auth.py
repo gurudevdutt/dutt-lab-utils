@@ -69,8 +69,8 @@ class MicrosoftAuthManager:
             raise MicrosoftAuthError(
                 "Microsoft OAuth configuration incomplete. Set these environment variables:\n"
                 f"  {ENV_CLIENT_ID} — Azure app (client) ID\n"
-                f"  {ENV_CLIENT_SECRET} — client secret (required to be present; "
-                "device-code flow uses public client and does not send the secret)\n"
+                f"  {ENV_CLIENT_SECRET} — client secret (required; passed as "
+                "client_credential for tenants that require it with device flow)\n"
                 f"  {ENV_TENANT_ID} — directory (tenant) ID\n"
                 "Register a public client / native app in Azure Portal and enable "
                 "delegated Graph permissions for Mail and Calendars."
@@ -80,11 +80,12 @@ class MicrosoftAuthManager:
     def _get_app(self) -> msal.PublicClientApplication:
         if self._app is not None:
             return self._app
-        client_id, _secret, tenant_id = self._ensure_config()
+        client_id, secret, tenant_id = self._ensure_config()
         authority = f"https://login.microsoftonline.com/{tenant_id}"
         self._app = msal.PublicClientApplication(
             client_id,
             authority=authority,
+            client_credential=secret,
             token_cache=self._cache,
         )
         return self._app

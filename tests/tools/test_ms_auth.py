@@ -19,7 +19,7 @@ def test_get_token_raises_when_credentials_missing(tmp_path):
 
 
 def test_get_token_returns_token_string(tmp_path, monkeypatch):
-    """Silent acquire returns access_token string."""
+    """Silent acquire returns access_token string; PCA gets client_credential."""
     monkeypatch.setenv("MICROSOFT_CLIENT_ID", "cid")
     monkeypatch.setenv("MICROSOFT_CLIENT_SECRET", "secret")
     monkeypatch.setenv("MICROSOFT_TENANT_ID", "tid")
@@ -29,10 +29,15 @@ def test_get_token_returns_token_string(tmp_path, monkeypatch):
     mock_app.get_accounts.return_value = [{"username": "u@example.com"}]
     mock_app.acquire_token_silent.return_value = {"access_token": "token-abc-123"}
 
-    with patch("pittqlab_utils.tools.ms_auth.msal.PublicClientApplication", return_value=mock_app):
+    with patch("pittqlab_utils.tools.ms_auth.msal.PublicClientApplication") as mock_pca:
+        mock_pca.return_value = mock_app
         token = auth.get_token()
 
     assert token == "token-abc-123"
+    mock_pca.assert_called_once()
+    assert mock_pca.call_args.kwargs["client_credential"] == "secret"
+    assert mock_pca.call_args.kwargs["token_cache"] is auth._cache
+    assert mock_pca.call_args.kwargs["authority"] == "https://login.microsoftonline.com/tid"
     mock_app.acquire_token_silent.assert_called_once()
     mock_app.initiate_device_flow.assert_not_called()
 
@@ -75,9 +80,12 @@ def test_uses_cached_token_when_not_expired(tmp_path, monkeypatch):
     mock_app.get_accounts.return_value = [{"home_account_id": "hid"}]
     mock_app.acquire_token_silent.return_value = {"access_token": "from-silent"}
 
-    with patch("pittqlab_utils.tools.ms_auth.msal.PublicClientApplication", return_value=mock_app):
+    with patch("pittqlab_utils.tools.ms_auth.msal.PublicClientApplication") as mock_pca:
+        mock_pca.return_value = mock_app
         token = auth.get_token()
 
     assert token == "from-silent"
+    mock_pca.assert_called_once()
+    assert mock_pca.call_args.kwargs["client_credential"] == "secret"
     mock_app.acquire_token_silent.assert_called_once()
     mock_app.initiate_device_flow.assert_not_called()
