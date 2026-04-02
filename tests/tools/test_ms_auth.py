@@ -19,7 +19,7 @@ def test_get_token_raises_when_credentials_missing(tmp_path):
 
 
 def test_get_token_returns_token_string(tmp_path, monkeypatch):
-    """Silent acquire returns access_token string; PCA gets client_credential."""
+    """Silent acquire returns access_token string; PCA is public client only."""
     monkeypatch.setenv("MICROSOFT_CLIENT_ID", "cid")
     monkeypatch.setenv("MICROSOFT_CLIENT_SECRET", "secret")
     monkeypatch.setenv("MICROSOFT_TENANT_ID", "tid")
@@ -35,7 +35,7 @@ def test_get_token_returns_token_string(tmp_path, monkeypatch):
 
     assert token == "token-abc-123"
     mock_pca.assert_called_once()
-    assert mock_pca.call_args.kwargs["client_credential"] == "secret"
+    assert mock_pca.call_args.kwargs.get("client_credential") is None
     assert mock_pca.call_args.kwargs["token_cache"] is auth._cache
     assert mock_pca.call_args.kwargs["authority"] == "https://login.microsoftonline.com/tid"
     mock_app.acquire_token_silent.assert_called_once()
@@ -86,6 +86,6 @@ def test_uses_cached_token_when_not_expired(tmp_path, monkeypatch):
 
     assert token == "from-silent"
     mock_pca.assert_called_once()
-    assert mock_pca.call_args.kwargs["client_credential"] == "secret"
+    assert mock_pca.call_args.kwargs.get("client_credential") is None
     mock_app.acquire_token_silent.assert_called_once()
     mock_app.initiate_device_flow.assert_not_called()
