@@ -11,6 +11,8 @@ import tempfile
 from pathlib import Path
 from typing import Any, Literal, Protocol
 
+import httpx
+
 logger = logging.getLogger(__name__)
 
 # ElevenLabs defaults
@@ -56,7 +58,13 @@ def _mp3_to_ogg(mp3_path: Path, ogg_path: Path) -> None:
     """Convert mp3 to ogg/opus using pydub. Raises clear error if ffmpeg missing."""
     try:
         from pydub import AudioSegment
+        from pydub.utils import which
 
+        if not (which("ffmpeg") or which("avconv")):
+            raise RuntimeError(
+                "ffmpeg is required for gTTS ogg conversion. "
+                "Install it: Ubuntu/Debian: sudo apt install ffmpeg; Mac: brew install ffmpeg"
+            )
         audio = AudioSegment.from_mp3(str(mp3_path))
         output_path = Path(ogg_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -89,7 +97,7 @@ class ElevenLabsVoice:
                 voice_id=self._voice_id,
                 text=text,
                 model_id=self._model_id,
-                output_format="opus_48000_64",
+                output_format="ogg_opus",
             )
             output_path.parent.mkdir(parents=True, exist_ok=True)
             with open(output_path, "wb") as f:
@@ -145,3 +153,32 @@ class VoiceResponse:
         finally:
             if temp_path.exists():
                 temp_path.unlink()
+
+    async def send_voice_note_direct(
+        self,
+        bot_token: str,
+        chat_id: int,
+        text: str,
+    ) -> None:
+        """
+        Synthesize text to .ogg and post directly to Telegram API with httpx.
+
+        Uses ElevenLabs if ELEVENLABS_API_KEY is set, otherwise falls back to gTTS.
+        Cleans up the temporary file in all cases.
+        """
+        with tempfile.NamedTemporaryFile(suffix=".ogg", delete=False) as f:
+            temp_path = Path(f.name)
+
+        try:
+            await self.synthesize(text, temp_path)
+            async with httpx.AsyncClient() as client:
+                with open(temp_path, "rb") as audio:
+                    response = await client.post(
+                        f"https://api.telegram.org/bot{bot_token}/sendVoice",
+                        data={"chat_id": chat_id},
+                        files={"voice": ("voice.ogg", audio, "audio/ogg")},
+                        timeout=30.0,
+                    )
+                    response.raise_for_status()
+        finally:
+            temp_path.unlink(missing_ok=True)
