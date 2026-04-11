@@ -1,3 +1,4 @@
+from .canvas import CanvasClient, canvas_client_from_env
 from .scoring import (
     CategoryScore,
     Rubric,
@@ -7,6 +8,8 @@ from .scoring import (
 )
 
 __all__ = [
+    "CanvasClient",
+    "canvas_client_from_env",
     "RubricCategory",
     "Rubric",
     "CategoryScore",
